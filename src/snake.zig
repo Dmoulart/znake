@@ -11,7 +11,12 @@ pub const CELL_SIZE = 10;
 
 pub const Direction = enum(u8) { Top, Left, Right, Bottom };
 
-pub const Snake = struct { x: i16, y: i16, direction: Direction };
+pub const SnakeBodyPart = struct {
+    x: i16,
+    y: i16,
+    direction: Direction,
+};
+pub const Snake = struct { head: SnakeBodyPart, tail: [10]SnakeBodyPart };
 
 pub const Game = struct {
     const MAX_HEIGHT = @divTrunc(ScreenHeight, CELL_SIZE);
@@ -19,22 +24,26 @@ pub const Game = struct {
     var player: Snake = undefined;
 
     pub fn createPlayer(x: i16, y: i16) void {
-        player = Snake{ .x = x, .y = y, .direction = Direction.Top };
+        player = Snake{ .head = SnakeBodyPart{
+            .x = x,
+            .y = y,
+            .direction = Direction.Top,
+        }, .tail = undefined };
     }
 
     pub fn move() void {
-        switch (player.direction) {
+        switch (player.head.direction) {
             Direction.Top => {
-                player.y -= 1;
+                player.head.y -= 1;
             },
             Direction.Bottom => {
-                player.y += 1;
+                player.head.y += 1;
             },
             Direction.Left => {
-                player.x -= 1;
+                player.head.x -= 1;
             },
             Direction.Right => {
-                player.x += 1;
+                player.head.x += 1;
             },
         }
     }
@@ -46,13 +55,13 @@ pub const Game = struct {
 
         // Hoooly fuuu string lennn ???
         if (Game.keyPressed(key[0..2], "Up")) {
-            player.direction = Direction.Top;
+            player.head.direction = Direction.Top;
         } else if (Game.keyPressed(key[0..4], "Down")) {
-            player.direction = Direction.Bottom;
+            player.head.direction = Direction.Bottom;
         } else if (Game.keyPressed(key[0..4], "Left")) {
-            player.direction = Direction.Left;
+            player.head.direction = Direction.Left;
         } else if (Game.keyPressed(key[0..5], "Right")) {
-            player.direction = Direction.Right;
+            player.head.direction = Direction.Right;
         }
     }
 
@@ -61,7 +70,7 @@ pub const Game = struct {
     }
 
     pub fn gameOver() bool {
-        return player.x < 0 or player.x > MAX_WIDTH or player.y < 0 or player.y > MAX_WIDTH;
+        return player.head.x < 0 or player.head.x > MAX_WIDTH or player.head.y < 0 or player.head.y > MAX_WIDTH;
     }
 
     pub fn render(renderer: anytype) void {
@@ -69,8 +78,8 @@ pub const Game = struct {
 
         var rect = c.SDL_Rect{ .x = @intCast(c_int, 0), .y = @intCast(c_int, 0), .w = CELL_SIZE, .h = CELL_SIZE };
 
-        rect.x = @intCast(c_int, player.x * CELL_SIZE);
-        rect.y = @intCast(c_int, player.y * CELL_SIZE);
+        rect.x = @intCast(c_int, player.head.x * CELL_SIZE);
+        rect.y = @intCast(c_int, player.head.y * CELL_SIZE);
 
         _ = c.SDL_RenderDrawRect(renderer, &rect);
     }
