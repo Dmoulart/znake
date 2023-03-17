@@ -1,0 +1,1 @@
+zig build && ./zig-out/bin/zig-snake

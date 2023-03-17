@@ -33,7 +33,8 @@ pub fn main() anyerror!void {
     const centerX = @divTrunc(ScreenWidth, 2);
     const centerY = @divTrunc(ScreenHeight, 2);
 
-    Game.createPlayer(@divTrunc(centerX, CELL_SIZE), @divTrunc(centerY, CELL_SIZE));
+    // Game.createPlayer(@divTrunc(centerX, CELL_SIZE), @divTrunc(centerY, CELL_SIZE));
+    _ = Game.createPlayer(@divTrunc(centerX, CELL_SIZE), @divTrunc(centerY, CELL_SIZE));
 
     while (!quit) {
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
