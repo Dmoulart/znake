@@ -7,6 +7,8 @@ const testing = std.testing;
 
 const TailQueue = std.TailQueue;
 
+const ArrayList = std.ArrayList;
+
 const ScreenWidth = @import("main.zig").ScreenWidth;
 const ScreenHeight = @import("main.zig").ScreenHeight;
 
@@ -20,35 +22,38 @@ pub const SnakeBodyPart = struct {
     direction: Direction,
 };
 
-pub const SnakeBody = TailQueue(SnakeBodyPart);
+pub const SnakeBody = std.ArrayList(SnakeBodyPart);
 
 pub const Snake = struct {
     const Self = @This();
     body: SnakeBody,
-    head: SnakeBody.Node,
 };
+
+pub fn createPlayer() void {
+    const allocator = std.heap.page_allocator;
+    // const mem: []SnakeBodyPart = try allocator.alloc(SnakeBodyPart, 100);
+    // defer allocator.free(mem);
+
+    var body = std.ArrayList(SnakeBodyPart).init(allocator);
+    try body.append(SnakeBodyPart{ .x = 10, .y = 10, .direction = Direction.Top });
+    // var head = SnakeBody.Node{ .data = SnakeBodyPart{ .x = x, .y = y, .direction = Direction.Top } };
+
+    // player.body.prepend(&head);
+    // player.head = player.body.first.?;
+    // player.head = head;
+
+    // std.debug.print("head {any} \n", .{head});
+    // player = Snake{ .head = SnakeBodyPart{
+    //     .x = x,
+    //     .y = y,
+    //     .direction = Direction.Top,
+    // }, .tail = undefined };
+}
 
 pub const Game = struct {
     const MAX_HEIGHT = @divTrunc(ScreenHeight, CELL_SIZE);
     const MAX_WIDTH = @divTrunc(ScreenWidth, CELL_SIZE);
     var player: Snake = undefined;
-
-    pub fn createPlayer(x: i16, y: i16) void {
-        player = Snake{ .body = SnakeBody{}, .head = undefined };
-
-        std.debug.print("x {} y {} \n", .{ x, y });
-        var head = SnakeBody.Node{ .data = SnakeBodyPart{ .x = x, .y = y, .direction = Direction.Top } };
-        player.body.prepend(&head);
-        // player.head = player.body.first.?;
-        player.head = head;
-
-        // std.debug.print("head {any} \n", .{head});
-        // player = Snake{ .head = SnakeBodyPart{
-        //     .x = x,
-        //     .y = y,
-        //     .direction = Direction.Top,
-        // }, .tail = undefined };
-    }
 
     pub fn move() void {
         // var head = player.head.data;
@@ -105,18 +110,24 @@ pub const Game = struct {
         // rect.x = @intCast(c_int, player.head.data.x * CELL_SIZE);
         // rect.y = @intCast(c_int, player.head.data.y * CELL_SIZE);
 
-        var it = player.body.first;
-        std.debug.print("\n it {?}", .{it.?.data});
-        while (it) |node| : (it = node.next) {
-            rect.x = @intCast(c_int, it.?.data.x * CELL_SIZE);
-            rect.y = @intCast(c_int, it.?.data.y * CELL_SIZE);
+        // var body = player.body.first;
+        // std.debug.print("\n it {?}", .{it.?.data});
+        // while (it) |node| : (it = node.next) {
+        //     rect.x = @intCast(c_int, it.?.data.x * CELL_SIZE);
+        //     rect.y = @intCast(c_int, it.?.data.y * CELL_SIZE);
+        //     _ = c.SDL_RenderDrawRect(renderer, &rect);
+        // }
+
+        for (player.body) |part| {
+            rect.x = @intCast(c_int, part.x * CELL_SIZE);
+            rect.y = @intCast(c_int, part.y * CELL_SIZE);
             _ = c.SDL_RenderDrawRect(renderer, &rect);
         }
     }
 };
 
 test "Snake" {
-    const player = Game.createPlayer(0, 0);
+    const player = createPlayer(0, 0);
 
     try testing.expect(player.head().x == 0);
     try testing.expect(player.head().y == 0);
