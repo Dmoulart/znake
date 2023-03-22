@@ -5,7 +5,7 @@ const c = @cImport({
 const os = std.os;
 
 const Game = @import("snake.zig").Game;
-const createPlayer = @import("snake.zig").createPlayer;
+
 const CELL_SIZE = @import("snake.zig").CELL_SIZE;
 
 var speed: f32 = 100;
@@ -31,12 +31,12 @@ pub fn main() anyerror!void {
     var event: c.SDL_Event = undefined;
     var quit = false;
 
-    // const centerX = @divTrunc(ScreenWidth, 2);
-    // const centerY = @divTrunc(ScreenHeight, 2);
+    const centerX = @divTrunc(ScreenWidth, 2);
+    const centerY = @divTrunc(ScreenHeight, 2);
 
-    // Game.createPlayer(@divTrunc(centerX, CELL_SIZE), @divTrunc(centerY, CELL_SIZE));
-    // _ = createPlayer(@divTrunc(centerX, CELL_SIZE), @divTrunc(centerY, CELL_SIZE));
-    _ = createPlayer();
+    const player = try Game.createPlayer(@divTrunc(centerX, CELL_SIZE), @divTrunc(centerY, CELL_SIZE));
+    std.debug.print("player created :: head {}", .{player.head});
+    player.wololo = 2;
 
     while (!quit) {
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
