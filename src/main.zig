@@ -4,19 +4,17 @@ const c = @cImport({
 });
 const os = std.os;
 
-const Game = @import("snake.zig").Game;
-
 const CELL_SIZE = 20;
 
-var speed: f32 = 100;
+var speed: u8 = 100;
 
 const ErrorSet = error{SDLError};
 
-pub const ScreenWidth = 600;
-pub const ScreenHeight = 600;
+pub const SCREEN_WIDTH = 600;
+pub const SCREEN_HEIGHT = 600;
 
-const MAX_HEIGHT = @divTrunc(ScreenHeight, CELL_SIZE);
-const MAX_WIDTH = @divTrunc(ScreenWidth, CELL_SIZE);
+const MAX_HEIGHT = @divTrunc(SCREEN_HEIGHT, CELL_SIZE);
+const MAX_WIDTH = @divTrunc(SCREEN_WIDTH, CELL_SIZE);
 
 var RNG = std.rand.DefaultPrng.init(0);
 var random = std.rand.DefaultPrng.random(&RNG);
@@ -25,7 +23,7 @@ pub fn main() anyerror!void {
     _ = c.SDL_Init(c.SDL_INIT_EVERYTHING);
     defer c.SDL_Quit();
 
-    var window = c.SDL_CreateWindow("SDL Rectangle Example Thingy", 100, 100, ScreenWidth, ScreenHeight, c.SDL_WINDOW_SHOWN);
+    var window = c.SDL_CreateWindow("Znake", 100, 100, SCREEN_WIDTH, SCREEN_HEIGHT, c.SDL_WINDOW_SHOWN);
     if (window == null) {
         return ErrorSet.SDLError;
     }
@@ -35,10 +33,10 @@ pub fn main() anyerror!void {
     defer c.SDL_DestroyRenderer(renderer);
 
     var event: c.SDL_Event = undefined;
-    var quit = false;
+    var game_over = false;
 
-    const center_x = @divTrunc(ScreenWidth, 2);
-    const center_y = @divTrunc(ScreenHeight, 2);
+    const center_x = @divTrunc(SCREEN_WIDTH, 2);
+    const center_y = @divTrunc(SCREEN_HEIGHT, 2);
 
     const pos_x = @divTrunc(center_x, CELL_SIZE);
     const pos_y = @divTrunc(center_y, CELL_SIZE);
@@ -53,7 +51,7 @@ pub fn main() anyerror!void {
 
     var food = try Food.init(random, allocator);
 
-    while (!quit) {
+    while (!game_over) {
         _ = c.SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         _ = c.SDL_RenderClear(renderer);
 
@@ -63,7 +61,7 @@ pub fn main() anyerror!void {
                     player.changeDirection(event);
                 },
                 c.SDL_QUIT => {
-                    quit = true;
+                    game_over = true;
                 },
                 else => {},
             }
@@ -81,14 +79,15 @@ pub fn main() anyerror!void {
         }
 
         _ = c.SDL_RenderPresent(renderer);
-        c.SDL_Delay(100);
+
+        speed = 16 + (100 - player.length());
+
+        c.SDL_Delay(speed);
 
         if (player.isOutOfBounds() or try player.intersectsItself()) {
             c.SDL_Quit();
             std.os.exit(1);
         }
-
-        speed -= 0.1;
     }
 }
 
@@ -207,17 +206,20 @@ pub const Snake = struct {
     pub fn changeDirection(self: *Self, event: anytype) void {
         const key = c.SDL_GetKeyName(event.key.keysym.sym)[0..5];
 
-        // std.debug.print("\n Key pressed {any} ", .{key});
         self.head.prevDirection = self.head.direction;
 
         // Hoooly fuuu string lennn ???
         if (pressedKey(key[0..2], "Up")) {
+            if (self.head.direction == Direction.Bottom) return;
             self.head.direction = Direction.Top;
         } else if (pressedKey(key[0..4], "Down")) {
+            if (self.head.direction == Direction.Top) return;
             self.head.direction = Direction.Bottom;
         } else if (pressedKey(key[0..4], "Left")) {
+            if (self.head.direction == Direction.Right) return;
             self.head.direction = Direction.Left;
         } else if (pressedKey(key[0..5], "Right")) {
+            if (self.head.direction == Direction.Left) return;
             self.head.direction = Direction.Right;
         }
     }
@@ -289,6 +291,15 @@ pub const Snake = struct {
             }
         }
         return last orelse self.head;
+    }
+
+    fn length(self: *Self) u8 {
+        var part: ?*SnakeBodyPart = self.head;
+        var i: u8 = 0;
+        while (part != null) : (part = part.?.next) {
+            i += 1;
+        }
+        return i;
     }
 };
 
