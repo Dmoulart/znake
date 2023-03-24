@@ -169,7 +169,7 @@ pub const SnakeBodyPart = struct {
     }
 
     pub fn render(self: *Self, renderer: anytype, rect: anytype) void {
-        _ = c.SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        _ = c.SDL_SetRenderDrawColor(renderer, 0, 255, 120, 0);
 
         rect.x = @intCast(c_int, self.x * CELL_SIZE);
         rect.y = @intCast(c_int, self.y * CELL_SIZE);
